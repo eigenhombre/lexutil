@@ -59,19 +59,19 @@ type StateFn func(*Lexer) StateFn
 
 // Lexer holds the current state of the lexer.
 type Lexer struct {
-	name  string       // used only for error reports.
-	input string       // the string being scanned.
-	start int          // start position of this item.
-	pos   int          // current position in the input.
-	width int          // width of last rune read from input.
-	items chan LexItem // channel of scanned items.
+	Name  string       // used only for error reports.
+	Input string       // the string being scanned.
+	Start int          // start position of this item.
+	Pos   int          // current position in the input.
+	Width int          // width of last rune read from input.
+	Items chan LexItem // channel of scanned items.
 }
 
 // Emit passes a lexeme to the consumer on the items channel, and resets the
 // start to the current position.
 func (l *Lexer) Emit(t ItemType) {
-	l.items <- LexItem{t, l.input[l.start:l.pos]}
-	l.start = l.pos
+	l.Items <- LexItem{t, l.Input[l.Start:l.Pos]}
+	l.Start = l.Pos
 }
 
 const eof = -1
@@ -81,21 +81,21 @@ const eof = -1
 func (l *Lexer) Next() rune {
 	var r rune
 
-	if l.pos >= len(l.input) {
-		l.width = 0
+	if l.Pos >= len(l.Input) {
+		l.Width = 0
 		return eof
 	}
-	r, l.width = utf8.DecodeRuneInString(l.input[l.pos:])
-	l.pos += l.width
+	r, l.Width = utf8.DecodeRuneInString(l.Input[l.Pos:])
+	l.Pos += l.Width
 	return r
 }
 
 // Lex starts the lexer on a separate goroutine.
 func Lex(name, input string, startState StateFn) *Lexer {
 	l := &Lexer{
-		name:  name,
-		input: input,
-		items: make(chan LexItem),
+		Name:  name,
+		Input: input,
+		Items: make(chan LexItem),
 	}
 	go l.run(startState) // Concurrently run state machine.
 	return l
@@ -110,19 +110,19 @@ func (l *Lexer) Peek() rune {
 
 // Backup steps back one rune. Can only be called once per call of next.
 func (l *Lexer) Backup() {
-	l.pos -= l.width
+	l.Pos -= l.Width
 }
 
 func (l *Lexer) run(startState StateFn) {
 	for state := startState; state != nil; {
 		state = state(l)
 	}
-	close(l.items) // No more tokens will be delivered.
+	close(l.Items) // No more tokens will be delivered.
 }
 
 // Ignore skips over the pending input before this point.
 func (l *Lexer) Ignore() {
-	l.start = l.pos
+	l.Start = l.Pos
 }
 
 // Accept consumes the next rune if it's from the valid set.
@@ -145,7 +145,7 @@ func (l *Lexer) AcceptRun(valid string) {
 // by passing back a nil pointer that will be the next
 // state, terminating l.run.
 func (l *Lexer) Errorf(format string, errItem ItemType, args ...interface{}) StateFn {
-	l.items <- LexItem{
+	l.Items <- LexItem{
 		errItem,
 		fmt.Sprintf(format, args...),
 	}

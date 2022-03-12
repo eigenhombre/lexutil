@@ -74,7 +74,8 @@ func (l *Lexer) Emit(t ItemType) {
 	l.Start = l.Pos
 }
 
-const eof = -1
+// EOF is the rune returned when end of output is reached:
+const EOF = -1
 
 // Next returns the next rune in the input, accounting for variable rune width
 // in bytes.
@@ -83,7 +84,7 @@ func (l *Lexer) Next() rune {
 
 	if l.Pos >= len(l.Input) {
 		l.Width = 0
-		return eof
+		return EOF
 	}
 	r, l.Width = utf8.DecodeRuneInString(l.Input[l.Pos:])
 	l.Pos += l.Width

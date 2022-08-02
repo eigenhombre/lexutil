@@ -6,11 +6,13 @@ import (
 	"testing"
 )
 
-// a little language:
+// Build, and lex, a little language:
 //
-// examples: AAA BBBB   AA B AAA
-// anything else fails
-// demonstrate this with tests
+// well-formed examples:
+//   AAA BBBB
+//   AA B AAA
+// failing examples:
+//   AA C AAA
 
 const (
 	itemAs ItemType = iota
@@ -18,18 +20,21 @@ const (
 	itemErr
 )
 
-func lexBetween(l *Lexer) StateFn {
+// lexStart is the only state in the lexer.
+// Most lexers will have multiple StatFn's; only
+// one state is needed for our toy language.
+func lexStart(l *Lexer) StateFn {
 	for {
 		r := l.Next()
 		if r == 'A' {
 			l.AcceptRun("A")
 			l.Emit(itemAs)
-			return lexBetween
+			return lexStart
 		}
 		if r == 'B' {
 			l.AcceptRun("B")
 			l.Emit(itemBs)
-			return lexBetween
+			return lexStart
 		}
 		if strings.ContainsRune(" ", r) {
 			l.Ignore()
@@ -42,14 +47,6 @@ func lexBetween(l *Lexer) StateFn {
 	}
 }
 
-func items(l *Lexer) []LexItem {
-	var items []LexItem
-	for item := range l.Items {
-		items = append(items, item)
-	}
-	return items
-}
-
 func TestSimpleGrammar(t *testing.T) {
 	abbrev := func(typ ItemType) func(string) LexItem {
 		return func(input string) LexItem {
@@ -59,9 +56,19 @@ func TestSimpleGrammar(t *testing.T) {
 	As := abbrev(itemAs)
 	Bs := abbrev(itemBs)
 	Err := abbrev(itemErr)
+
 	toks := func(items ...LexItem) []LexItem {
 		return items
 	}
+
+	getitems := func(l *Lexer) []LexItem {
+		var items []LexItem
+		for item := range l.Items {
+			items = append(items, item)
+		}
+		return items
+	}
+
 	var tests = []struct {
 		input string
 		want  []LexItem
@@ -74,8 +81,8 @@ func TestSimpleGrammar(t *testing.T) {
 		{"AA C AAA", toks(As("AA"), Err("unexpected rune 'C'"), As("AAA"))},
 	}
 	for _, test := range tests {
-		l := Lex("test", test.input, lexBetween)
-		got := items(l)
+		l := Lex("test", test.input, lexStart)
+		got := getitems(l)
 		if !reflect.DeepEqual(got, test.want) {
 			t.Errorf("got %v, want %v", got, test.want)
 		}

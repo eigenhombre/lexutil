@@ -6,9 +6,10 @@ package, as described by Rob Pike in this talk: https://www.youtube.com/watch?v=
 
 Slightly modified by John Jacobsen to work with a user-supplied set of
 lexemes and state functions, and to work as a stand-alone package that can be
-useful for a variety of custom lexers.  A simple example can be seen
-in [the unit test file](https://github.com/eigenhombre/lexutil/blob/master/lexutil_test.go#L9).
+useful for a variety of custom lexers.  
 
+A simple example can be seen
+in [the unit test file](https://github.com/eigenhombre/lexutil/blob/master/lexutil_test.go#L9).
 For a slightly more complicated example, see `lex.go` in [this
 project](https://github.com/eigenhombre/l1/).
 

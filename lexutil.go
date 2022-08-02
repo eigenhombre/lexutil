@@ -144,7 +144,8 @@ func (l *Lexer) AcceptRun(valid string) {
 
 // Errorf returns an error token and terminates the scan
 // by passing back a nil pointer that will be the next
-// state, terminating l.run.
+// state, terminating l.run.  errItem is the token type
+// for the error token.
 func (l *Lexer) Errorf(format string, errItem ItemType, args ...interface{}) StateFn {
 	l.Items <- LexItem{
 		errItem,

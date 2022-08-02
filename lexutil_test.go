@@ -15,6 +15,7 @@ import (
 const (
 	itemAs ItemType = iota
 	itemBs
+	itemErr
 )
 
 func lexBetween(l *Lexer) StateFn {
@@ -37,8 +38,7 @@ func lexBetween(l *Lexer) StateFn {
 		if r == EOF {
 			return nil
 		}
-		// FIXME: itemAs
-		l.Errorf("unexpected rune %q", itemAs, r)
+		l.Errorf("unexpected rune %q", itemErr, r)
 	}
 }
 
@@ -58,6 +58,7 @@ func TestSimpleGrammar(t *testing.T) {
 	}
 	As := abbrev(itemAs)
 	Bs := abbrev(itemBs)
+	Err := abbrev(itemErr)
 	toks := func(items ...LexItem) []LexItem {
 		return items
 	}
@@ -70,9 +71,7 @@ func TestSimpleGrammar(t *testing.T) {
 		{"BB BB", toks(Bs("BB"), Bs("BB"))},
 		{"AAA BBBB", toks(As("AAA"), Bs("BBBB"))},
 		{"AA B AAA", toks(As("AA"), Bs("B"), As("AAA"))},
-		// FIXME: Add check for error:
-		// {"AA C AAA", ... etc.
-
+		{"AA C AAA", toks(As("AA"), Err("unexpected rune 'C'"), As("AAA"))},
 	}
 	for _, test := range tests {
 		l := Lex("test", test.input, lexBetween)

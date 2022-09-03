@@ -6,16 +6,18 @@ import (
 	"testing"
 )
 
-// Build, and lex, a little language:
+// Build, and lex, a little language, made of water, and the letter B:
 //
 // well-formed examples:
-//   AAA BBBB
-//   AA B AAA
+//   水水水 BBBB
+//   水 B 水水水
 // failing examples:
-//   AA C AAA
+//   水水 C BBB
+//   i fail
+//   水果
 
 const (
-	itemAs ItemType = iota
+	item水s ItemType = iota
 	itemBs
 	itemErr
 )
@@ -26,9 +28,9 @@ const (
 func lexStart(l *Lexer) StateFn {
 	for {
 		r := l.Next()
-		if r == 'A' {
-			l.AcceptRun("A")
-			l.Emit(itemAs)
+		if r == '水' {
+			l.AcceptRun("水")
+			l.Emit(item水s)
 			return lexStart
 		}
 		if r == 'B' {
@@ -53,7 +55,7 @@ func TestSimpleGrammar(t *testing.T) {
 			return LexItem{Typ: typ, Val: input}
 		}
 	}
-	As := abbrev(itemAs)
+	As := abbrev(item水s)
 	Bs := abbrev(itemBs)
 	Err := abbrev(itemErr)
 
@@ -74,11 +76,11 @@ func TestSimpleGrammar(t *testing.T) {
 		want  []LexItem
 	}{
 		{"", toks()},
-		{"A", toks(As("A"))},
+		{"水", toks(As("水"))},
 		{"BB BB", toks(Bs("BB"), Bs("BB"))},
-		{"AAA BBBB", toks(As("AAA"), Bs("BBBB"))},
-		{"AA B AAA", toks(As("AA"), Bs("B"), As("AAA"))},
-		{"AA C AAA", toks(As("AA"), Err("unexpected rune 'C'"), As("AAA"))},
+		{"水水水 BBBB", toks(As("水水水"), Bs("BBBB"))},
+		{"水水 B 水水水", toks(As("水水"), Bs("B"), As("水水水"))},
+		{"水水 C 水水水", toks(As("水水"), Err("unexpected rune 'C'"), As("水水水"))},
 	}
 	for _, test := range tests {
 		l := Lex("test", test.input, lexStart)
